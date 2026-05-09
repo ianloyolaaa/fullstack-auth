@@ -1,166 +1,54 @@
-# Loyola, Ian Francis M. BSIT-3F
-# Angular 21 Auth Boilerplate — Frontend
+# Loyola, Ian Francis M.
+# Angular 21 Auth Boilerplate (Beginner Guide)
 
-Full-featured authentication frontend built with **Angular 21**, connected to the **Node.js + TypeScript + MySQL** backend API.
+This project is a beginner-friendly Angular 21 boilerplate that demonstrates a complete authentication flow:
 
----
+- Email sign up + email verification
+- Login + logout
+- JWT auth header for API requests
+- Refresh tokens (cookie-based) + auto-refresh before access token expiry
+- Forgot password + reset password
+- Role-based authorization (User & Admin)
+- Admin area for account management
+- Profile area for viewing/updating your own account
 
-## Features
+## Table of contents
 
-- ✅ Email Sign Up & Verification
-- ✅ JWT Login with silent refresh (auto-renews 1 min before expiry)
-- ✅ Forgot Password & Reset Password
-- ✅ Role-Based Access Control (Admin / User)
-- ✅ Profile View & Update
-- ✅ Admin Panel — manage all accounts (CRUD)
-- ✅ Global alert system
-- ✅ Auto-login on page reload (via refresh token cookie)
-- ✅ Bootstrap 5 UI
+- [1) Prerequisites](#1-prerequisites)
+- [2) Run the app (real API)](#2-run-the-app-real-api)
+- [3) Run the app (fake backend, no API)](#3-run-the-app-fake-backend-no-api)
+- [4) Using the app (what to click)](#4-using-the-app-what-to-click)
+- [5) How authentication works](#5-how-authentication-works)
+- [6) Authorization (roles + route guards)](#6-authorization-roles--route-guards)
+- [7) Project structure (quick tour)](#7-project-structure-quick-tour)
+- [8) Troubleshooting](#8-troubleshooting)
 
----
+## 1) Prerequisites
 
-## Project Structure
+- Node.js (LTS recommended)
+- npm (comes with Node.js)
+- (Optional) Angular CLI:
+- `npm i -g @angular/cli`
 
-```
-src/
-├── app/
-│   ├── _components/
-│   │   └── alert.component.ts/.html     ← Global alert messages
-│   ├── _helpers/
-│   │   ├── app.initializer.ts           ← Auto-login on startup
-│   │   ├── auth.guard.ts                ← Route protection
-│   │   ├── jwt.interceptor.ts           ← Adds JWT to every request
-│   │   ├── error.interceptor.ts         ← Handles 401/403 globally
-│   │   └── must-match.validator.ts      ← Password confirmation validator
-│   ├── _models/
-│   │   ├── account.ts                   ← Account interface
-│   │   ├── alert.ts                     ← Alert models
-│   │   └── role.ts                      ← Role enum (Admin/User)
-│   ├── _services/
-│   │   ├── account.service.ts           ← All API calls to backend
-│   │   └── alert.service.ts             ← Alert messaging bus
-│   ├── account/                         ← Login, Register, Verify, Forgot/Reset Password
-│   ├── admin/                           ← Admin panel + accounts CRUD (Admin only)
-│   ├── home/                            ← Home dashboard
-│   ├── profile/                         ← Profile details + update
-│   ├── app.component.ts/.html           ← Root: navbar + router-outlet
-│   ├── app.module.ts                    ← Root module
-│   └── app-routing.module.ts            ← Top-level routes
-├── environments/
-│   ├── environment.ts                   ← Dev: apiUrl = http://localhost:4000
-│   └── environment.prod.ts              ← Prod: apiUrl = your deployed backend
-└── styles.css                           ← Global Bootstrap overrides
-```
+## 2) Run the app (real API)
 
----
+By default this project is set up to call a real API at:
 
-## Connecting to the Backend
+- `http://localhost:4000` (see `src/environments/environment.ts`)
 
-### Step 1 — Start the Node.js backend
+### Step 1: install packages
 
-Make sure the backend (`node-mysql-api`) is running:
+From the project root (where `package.json` is):
 
-```bash
-cd node-mysql-api
-npm run start:dev
-# Runs on http://localhost:4000
-```
+```bash 
+npm install 
 
-### Step 2 — Install Angular dependencies
 
-```bash
-cd angular-auth
-npm install
-```
 
-### Step 3 — Run Angular dev server
+Start an API that implements the /accounts/* endpoints described in the How authentication works section.
 
-```bash
+The frontend expects the API to be available at http://localhost:4000 by default.
+
+Step 3: start Angular
+Bash
 npm start
-# Runs on http://localhost:4200
-# API calls proxied to http://localhost:4000 via proxy.conf.json
-```
-
-Open your browser at **http://localhost:4200**
-
----
-
-## How the Connection Works
-
-| Angular | → | Node.js Backend |
-|---------|---|----------------|
-| `AccountService.login()` | POST | `/accounts/authenticate` |
-| `AccountService.register()` | POST | `/accounts/register` |
-| `AccountService.verifyEmail()` | POST | `/accounts/verify-email` |
-| `AccountService.forgotPassword()` | POST | `/accounts/forgot-password` |
-| `AccountService.validateResetToken()` | POST | `/accounts/validate-reset-token` |
-| `AccountService.resetPassword()` | POST | `/accounts/reset-password` |
-| `AccountService.refreshToken()` | POST | `/accounts/refresh-token` |
-| `AccountService.logout()` | POST | `/accounts/revoke-token` |
-| `AccountService.getAll()` | GET | `/accounts` (Admin only) |
-| `AccountService.getById(id)` | GET | `/accounts/:id` |
-| `AccountService.create(params)` | POST | `/accounts` (Admin only) |
-| `AccountService.update(id, params)` | PUT | `/accounts/:id` |
-| `AccountService.delete(id)` | DELETE | `/accounts/:id` |
-
-### JWT Flow
-1. Login → backend returns `jwtToken` (15 min) + sets `refreshToken` HTTP-only cookie (7 days)
-2. `JwtInterceptor` attaches `Authorization: Bearer <jwtToken>` to every request
-3. Timer auto-refreshes the JWT **1 minute before** it expires (silent refresh)
-4. On page reload, `appInitializer` calls `/accounts/refresh-token` using the cookie to restore the session
-
----
-
-## Full End-to-End Test Flow
-
-| Step | Action | Where |
-|------|--------|-------|
-| 1 | Go to `/account/register` | Register first account (becomes Admin) |
-| 2 | Check Ethereal email inbox | Copy the verification token/link |
-| 3 | Go to `/account/verify-email?token=TOKEN` | Verify the account |
-| 4 | Go to `/account/login` | Log in |
-| 5 | Home page shows name + role | Confirm Admin badge |
-| 6 | Go to `/admin/accounts` | See all accounts (Admin only) |
-| 7 | Go to `/profile/update` | Edit profile or change password |
-| 8 | Go to `/account/forgot-password` | Test password reset flow |
-
----
-
-## Changing the Backend URL
-
-**Development** — edit `src/environments/environment.ts`:
-```ts
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:4000'   // ← change this
-};
-```
-
-**Production** — edit `src/environments/environment.prod.ts`:
-```ts
-export const environment = {
-  production: true,
-  apiUrl: 'https://your-backend.onrender.com'  // ← your deployed backend
-};
-```
-
----
-
-## Production Build
-
-```bash
-npm run build:prod
-# Output: dist/angular-auth-boilerplate/
-# Deploy this folder to any static host (Netlify, Vercel, Render, etc.)
-```
-
-### Deploy to Render (Static Site)
-- Build Command: `npm run build:prod`
-- Publish Directory: `dist/angular-auth-boilerplate/browser`
-- Set env var or edit `environment.prod.ts` with your backend URL
-
-### CORS (Important for Production)
-In the backend `config.json` or env vars, set `CORS_ORIGIN` to your Angular app's URL:
-```
-CORS_ORIGIN=https://your-angular-app.onrender.com
-```
