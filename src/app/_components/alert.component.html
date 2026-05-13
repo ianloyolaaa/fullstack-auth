@@ -1,4 +1,4 @@
-<div *ngIf="alerts?.length" class="container">
+<div *ngIf="alerts.length > 0" class="container">
   <div class="m-3">
     <!-- Fixed: removed space in cssClasses(alert) -->
     <div *ngFor="let alert of alerts" [class]="cssClasses(alert)">
